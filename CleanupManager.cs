@@ -6,7 +6,7 @@
  * 
  * Author: Serik Muftakhidinov
  * Created: 29.11.2025
- * Version: 1.2.4
+ * Version: 1.2.5
  * 
  * Developed with AI assistance from Google Deepmind (Gemini 2.0)
  * 
@@ -44,8 +44,8 @@ using Microsoft.VisualBasic.FileIO;
 using System.Net;
 using System.Collections.Specialized;
 
-[assembly: AssemblyVersion("1.2.4.0")]
-[assembly: AssemblyFileVersion("1.2.4.0")]
+[assembly: AssemblyVersion("1.2.5.0")]
+[assembly: AssemblyFileVersion("1.2.5.0")]
 [assembly: AssemblyTitle("File Cleanup Manager")]
 [assembly: AssemblyDescription("Автоматическая очистка файлов с уведомлениями в Telegram")]
 [assembly: AssemblyCompany("Serik Muftakhidinov")]
@@ -59,6 +59,7 @@ public class AppConfig
     public int DaysOld { get; set; }
     public bool Recursive { get; set; }
     public bool UseRecycleBin { get; set; }
+    public bool DetailedLog { get; set; }
     public int IntervalMinutes { get; set; }
     public List<string> FileExtensions { get; set; }
     public string TelegramBotToken { get; set; }
@@ -70,6 +71,7 @@ public class AppConfig
         DaysOld = 7;
         Recursive = false;
         UseRecycleBin = true;
+        DetailedLog = false;
         IntervalMinutes = 60;
         FileExtensions = new List<string>();
         TelegramBotToken = "";
@@ -125,6 +127,7 @@ static class Program
                 string json = File.ReadAllText(ConfigPath);
                 var serializer = new JavaScriptSerializer();
                 Config = serializer.Deserialize<AppConfig>(json) ?? new AppConfig();
+                if (Config.DetailedLog) Log("Конфигурация загружена: " + json, "DEBUG");
             }
         }
         catch (Exception ex)
@@ -333,11 +336,17 @@ public static class Cleaner
             {
                 try
                 {
+                    if (config.DetailedLog) Program.Log("Проверка файла: " + file, "DEBUG");
+
                     // Фильтр расширений
                     if (config.FileExtensions != null && config.FileExtensions.Count > 0)
                     {
                         string ext = Path.GetExtension(file).ToLower();
-                        if (!config.FileExtensions.Contains(ext)) continue;
+                        if (!config.FileExtensions.Contains(ext)) 
+                        {
+                            if (config.DetailedLog) Program.Log("Пропуск (расширение): " + file, "DEBUG");
+                            continue;
+                        }
                     }
 
                     DateTime lastWriteTime = File.GetLastWriteTime(file);
@@ -354,6 +363,10 @@ public static class Cleaner
                         
                         deletedCount++;
                         Program.Log(string.Format("Удален файл: {0}", file), "INFO");
+                    }
+                    else
+                    {
+                        if (config.DetailedLog) Program.Log("Пропуск (слишком новый): " + file, "DEBUG");
                     }
                 }
                 catch (Exception ex)
@@ -384,6 +397,7 @@ public class MainForm : Form
     private NumericUpDown numDays;
     private CheckBox chkRecursive;
     private CheckBox chkRecycleBin;
+    private CheckBox chkDetailedLog;
     private NumericUpDown numInterval;
     private TextBox txtExtensions;
     private TextBox txtLog;
@@ -462,6 +476,14 @@ public class MainForm : Form
         chkRecycleBin.Location = new Point(350, y + 25);
         chkRecycleBin.AutoSize = true;
         this.Controls.Add(chkRecycleBin);
+        
+        // Подробный лог
+        chkDetailedLog = new CheckBox();
+        chkDetailedLog.Text = "Подробный лог";
+        chkDetailedLog.Location = new Point(480, y + 25);
+        chkDetailedLog.AutoSize = true;
+        this.Controls.Add(chkDetailedLog);
+        
         y += 60;
 
         // Расширения
@@ -601,6 +623,7 @@ public class MainForm : Form
         numDays.Value = Program.Config.DaysOld;
         chkRecursive.Checked = Program.Config.Recursive;
         chkRecycleBin.Checked = Program.Config.UseRecycleBin;
+        chkDetailedLog.Checked = Program.Config.DetailedLog;
         numInterval.Value = Program.Config.IntervalMinutes;
         if (Program.Config.FileExtensions != null)
             txtExtensions.Text = string.Join(", ", Program.Config.FileExtensions.ToArray());
@@ -612,6 +635,7 @@ public class MainForm : Form
         Program.Config.DaysOld = (int)numDays.Value;
         Program.Config.Recursive = chkRecursive.Checked;
         Program.Config.UseRecycleBin = chkRecycleBin.Checked;
+        Program.Config.DetailedLog = chkDetailedLog.Checked;
         Program.Config.IntervalMinutes = (int)numInterval.Value;
         
         Program.Config.FileExtensions = new List<string>(
@@ -879,7 +903,7 @@ public class MainForm : Form
         
         // Версия
         var lblVersion = new Label();
-        lblVersion.Text = "Версия 1.2.4";
+        lblVersion.Text = "Версия 1.2.5";
         lblVersion.Location = new Point(0, y);
         lblVersion.Size = new Size(400, 25);
         lblVersion.TextAlign = ContentAlignment.MiddleCenter;

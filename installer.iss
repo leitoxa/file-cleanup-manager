@@ -1,14 +1,14 @@
 ; Inno Setup Script для File Cleanup Manager
 ; Created with Antigravity by Serik Muftakhidinov
-; Version 1.2.4 (Restored Features)
+; Version 1.2.5 (Detailed Logging)
 
 [Setup]
 AppName=File Cleanup Manager
-AppVersion=1.2.4
+AppVersion=1.2.5
 AppPublisher=Serik Muftakhidinov
 DefaultDirName={autopf}\FileCleanupManager
 DefaultGroupName=File Cleanup Manager
-OutputBaseFilename=FileCleanupManagerSetup_v1.2.4
+OutputBaseFilename=FileCleanupManagerSetup_v1.2.5
 Compression=lzma2/max
 SolidCompression=yes
 PrivilegesRequired=admin
