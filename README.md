@@ -5,111 +5,111 @@
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![.NET](https://img.shields.io/badge/.NET-4.5+-purple)
 
-Native Windows application for automatic file cleanup with Telegram notifications support.
+Нативное Windows-приложение для автоматической очистки файлов с поддержкой уведомлений в Telegram.
 
-## ✨ Features
+## ✨ Возможности
 
-- 🎨 **Modern Dark-themed GUI** - Beautiful and intuitive interface
-- 📂 **Flexible File Filtering** - Filter by file extensions with auto-detection
-- ⏰ **Scheduled Cleanup** - Runs as Windows Service with configurable intervals
-- 🔔 **Telegram Notifications** - Get notified about cleanup events and service status
-- 🔍 **Auto-Extension Scanning** - Automatically detect file types in folder
-- 📊 **Detailed Logging** - All operations logged to `cleanup.log`
-- 💾 **Persistent Configuration** - Settings saved in ProgramData (survives reinstallation)
-- �️ **Recycle Bin Support** - Safe deletion with optional recycle bin usage
-- 🔒 **TLS 1.2 Support** - Works on Windows Server 2012 and Windows 7+
+- 🎨 **Современный GUI** - Удобный интерфейс с темной темой
+- 📂 **Гибкая фильтрация** - Фильтр по расширениям файлов с автоопределением
+- ⏰ **Очистка по расписанию** - Работает как служба Windows с настраиваемым интервалом
+- 🔔 **Уведомления Telegram** - Отчеты об очистке и статусе службы прямо в мессенджер
+- 🔍 **Автосканирование** - Автоматическое определение типов файлов в папке
+- 📊 **Подробное логирование** - Все операции записываются в `cleanup.log`
+- 💾 **Сохранение настроек** - Конфигурация в ProgramData (сохраняется при переустановке)
+- 🗑️ **Корзина** - Безопасное удаление с возможностью перемещения в корзину
+- 🔒 **Поддержка TLS 1.2** - Работает на Windows Server 2012 и Windows 7+
 
-## 🚀 Quick Start
+## 🚀 Быстрый старт
 
-### Download & Install
+### Скачивание и установка
 
-Download the latest installer from [Releases](../../releases):
+Скачайте последний инсталлятор из [Releases](../../releases):
 - **FileCleanupManagerSetup_v1.2.2.exe** (~100 KB)
 
-Run the installer and follow the setup wizard.
+Запустите инсталлятор и следуйте инструкциям мастера установки.
 
-### Configuration
+### Настройка
 
-1. Launch "File Cleanup Manager" from Start Menu
-2. **Set Cleanup Folder**: Choose the folder to monitor
-3. **Set Retention Period**: Files older than X days will be deleted
-4. **Configure Extensions**: Filter by file types (e.g., `.log`, `.tmp`) or leave empty for all files
-5. **Set Check Interval**: How often to run cleanup (in minutes, recommended: 60)
-6. **Configure Telegram** (optional): Click "🔔 Telegram" button
+1. Запустите "File Cleanup Manager" из меню Пуск
+2. **Папка очистки**: Выберите папку для мониторинга
+3. **Срок хранения**: Файлы старше X дней будут удалены
+4. **Расширения**: Укажите типы файлов (например, `.log`, `.tmp`) или оставьте пустым для всех
+5. **Интервал**: Как часто запускать очистку (в минутах, рекомендуется: 60)
+6. **Telegram** (опционально): Нажмите кнопку "🔔 Telegram" для настройки
 
-### Install as Windows Service
+### Установка службы Windows
 
-1. Click **"Install"** in the Service Management section
-2. Click **"Start"** to begin automatic cleanup
-3. Service will run in the background and perform scheduled cleanups
+1. Нажмите **"Установить"** в секции управления службой
+2. Нажмите **"Запустить"**, чтобы начать автоматическую очистку
+3. Служба будет работать в фоне и выполнять очистку по расписанию
 
-**Note:** Administrator rights are required for service installation.
+**Примечание:** Для установки службы требуются права администратора.
 
-## 🔔 Telegram Notifications
+## 🔔 Уведомления в Telegram
 
-See [TELEGRAM_SETUP.md](TELEGRAM_SETUP.md) for detailed setup instructions.
+См. [TELEGRAM_SETUP.md](TELEGRAM_SETUP.md) для подробной инструкции.
 
-**Quick Setup:**
-1. Create a bot via [@BotFather](https://t.me/BotFather)
-2. Get your Chat ID via [@userinfobot](https://t.me/userinfobot)
-3. Click "🔔 Telegram" in the app and enter bot token and chat ID
-4. Click "Save" and "Test" to verify
+**Быстрая настройка:**
+1. Создайте бота через [@BotFather](https://t.me/BotFather)
+2. Получите ваш Chat ID через [@userinfobot](https://t.me/userinfobot)
+3. Нажмите "🔔 Telegram" в приложении и введите токен и chat ID
+4. Нажмите "Сохранить" и "Тест" для проверки
 
-### TLS 1.2 Fix for Windows Server 2012
+### Исправление TLS 1.2 для Windows Server 2012
 
-If Telegram notifications don't work on Windows Server 2012, run:
+Если уведомления не работают на Windows Server 2012, запустите файл:
 ```cmd
 enable_tls12.reg
 ```
-Then restart your server.
+Затем перезагрузите сервер.
 
-## 📝 Building from Source
+## 📝 Сборка из исходного кода
 
-### Requirements
-- Windows 7 or newer
-- .NET Framework 4.5+ (included in Windows 10/11)
+### Требования
+- Windows 7 или новее
+- .NET Framework 4.5+ (встроен в Windows 10/11)
 
-### Build
+### Компиляция
 
 ```cmd
 build.bat
 ```
 
-This will create `CleanupManager.exe` (~26 KB).
+Создаст файл `CleanupManager.exe` (~26 KB).
 
-### Create Installer
+### Создание инсталлятора
 
 ```cmd
 build_installer.bat
 ```
 
-Requires [Inno Setup](https://jrsoftware.org/isinfo.php) installed.
+Требуется установленный [Inno Setup](https://jrsoftware.org/isinfo.php).
 
-Output: `Output\FileCleanupManagerSetup_v1.2.2.exe`
+Результат: `Output\FileCleanupManagerSetup_v1.2.2.exe`
 
-## 📂 Project Structure
+## 📂 Структура проекта
 
 ```
 file-cleanup-manager/
-├── CleanupManager.cs          # Main source code
-├── build.bat                  # Compilation script
-├── build_installer.bat        # Installer build script
-├── installer.iss              # Inno Setup configuration
-├── enable_tls12.reg           # TLS 1.2 fix for Server 2012
-├── TELEGRAM_SETUP.md          # Telegram setup guide
-├── INSTALLER_GUIDE.md         # Installer creation guide
-└── Output/                    # Compiled installer output
+├── CleanupManager.cs          # Исходный код (C#)
+├── build.bat                  # Скрипт компиляции
+├── build_installer.bat        # Скрипт сборки инсталлятора
+├── installer.iss              # Конфигурация Inno Setup
+├── enable_tls12.reg           # Фикс TLS 1.2 для Server 2012
+├── TELEGRAM_SETUP.md          # Инструкция по Telegram
+├── INSTALLER_GUIDE.md         # Инструкция по инсталлятору
+└── Output/                    # Папка с готовым инсталлятором
     └── FileCleanupManagerSetup_v1.2.2.exe
 ```
 
-## ⚙️ Configuration
+## ⚙️ Конфигурация
 
-Settings are stored in:
+Настройки хранятся в:
 ```
 C:\ProgramData\FileCleanupManager\config.json
 ```
 
-Example configuration:
+Пример конфигурации:
 ```json
 {
     "folder_path": "C:\\Temp",
@@ -123,104 +123,104 @@ Example configuration:
 }
 ```
 
-## 🛠️ Usage
+## 🛠️ Использование
 
-### GUI Mode
+### Графический режим (GUI)
 ```cmd
 CleanupManager.exe
 ```
 
-### Command Line
+### Командная строка
 
-**Install Service:**
+**Установка службы:**
 ```cmd
 CleanupManager.exe /install
 ```
 
-**Uninstall Service:**
+**Удаление службы:**
 ```cmd
 CleanupManager.exe /uninstall
 ```
 
-**Run as Service (manual):**
+**Запуск как служба (вручную):**
 ```cmd
 CleanupManager.exe /service
 ```
 
-## ⚠️ Important Notes
+## ⚠️ Важные примечания
 
-1. **Administrator Rights**: Required for service installation/management
-2. **Backup Important Data**: Always backup before configuring cleanup
-3. **Test First**: Use "Preview" and "Test Run" buttons before installing service
-4. **Permanent Deletion**: Files are deleted permanently (unless recycle bin is enabled)
-5. **System Folders**: DO NOT use on Windows, Program Files, or System32 folders
+1. **Права администратора**: Нужны для установки и управления службой
+2. **Резервное копирование**: Всегда делайте бэкап перед настройкой очистки
+3. **Тестирование**: Используйте кнопки "Предпросмотр" и "Тест" перед установкой службы
+4. **Безвозвратное удаление**: Файлы удаляются навсегда (если не включена корзина)
+5. **Системные папки**: НЕ используйте на папках Windows, Program Files или System32
 
-## 🔧 Requirements
+## 🔧 Системные требования
 
-- **OS**: Windows 7 / Server 2012 or newer
-- **Framework**: .NET Framework 4.5+ (built-in on Windows 10/11)
-- **Permissions**: Administrator rights for service operations
+- **ОС**: Windows 7 / Server 2012 или новее
+- **Framework**: .NET Framework 4.5+ (встроен в Windows 10/11)
+- **Права**: Администратор (для службы)
 
-## 📊 Technical Details
+## 📊 Технические детали
 
-- **Language**: C# 5.0
-- **Framework**: .NET Framework 4.5
+- **Язык**: C# 5.0
+- **Фреймворк**: .NET Framework 4.5
 - **GUI**: Windows Forms
 - **JSON**: System.Web.Extensions (JavaScriptSerializer)
-- **Service**: System.ServiceProcess
-- **File Size**: ~26 KB (executable), ~100 KB (installer)
-- **Dependencies**: None (all system libraries)
+- **Служба**: System.ServiceProcess
+- **Размер**: ~26 KB (exe), ~100 KB (инсталлятор)
+- **Зависимости**: Нет (только системные библиотеки)
 
-## 🆘 Troubleshooting
+## 🆘 Устранение неполадок
 
-**Telegram notifications not working on Server 2012:**
-- Run `enable_tls12.reg` to enable TLS 1.2
-- Restart server
-- Check `C:\ProgramData\FileCleanupManager\cleanup.log` for errors
+**Telegram не работает на Server 2012:**
+- Запустите `enable_tls12.reg` для включения TLS 1.2
+- Перезагрузите сервер
+- Проверьте `C:\ProgramData\FileCleanupManager\cleanup.log` на ошибки
 
-**Service won't start:**
-- Verify folder path exists
-- Check permissions on target folder
-- Review logs in `cleanup.log`
-- Reinstall service (Uninstall → Install)
+**Служба не запускается:**
+- Проверьте существование папки
+- Проверьте права доступа к папке
+- Изучите логи в `cleanup.log`
+- Переустановите службу (Удалить → Установить)
 
-**Build errors:**
-- Ensure .NET Framework 4.5+ is installed
-- Check compiler path in `build.bat`
-- Run Command Prompt as Administrator
+**Ошибки сборки:**
+- Убедитесь, что установлен .NET Framework 4.5+
+- Проверьте путь к компилятору в `build.bat`
+- Запускайте командную строку от имени администратора
 
-## 📄 License
+## 📄 Лицензия
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - см. файл [LICENSE](LICENSE) для подробностей.
 
-## 👨‍💻 Author
+## 👨‍💻 Автор
 
 **Serik Muftakhidinov**
 
-Developed with AI assistance from Google Deepmind (Gemini 2.0).
+Разработано с помощью AI-ассистента Google Deepmind (Gemini 2.0).
 
-## 🆕 Version History
+## 🆕 История версий
 
-### v1.2.2 (Current)
-- ✅ Fixed Telegram settings persistence
-- ✅ Enhanced error logging with detailed diagnostics
-- ✅ Configuration stored in ProgramData (survives reinstallation)
+### v1.2.2 (Текущая)
+- ✅ Исправлено сохранение настроек Telegram
+- ✅ Улучшено логирование ошибок с детальной диагностикой
+- ✅ Конфигурация перенесена в ProgramData (сохраняется при переустановке)
 
 ### v1.2.0
-- ✅ TLS 1.2 support for Windows Server 2012
-- ✅ Telegram notifications for service events
-- ✅ Auto-extension scanning
-- ✅ Modern dark-themed GUI
+- ✅ Поддержка TLS 1.2 для Windows Server 2012
+- ✅ Уведомления в Telegram о событиях службы
+- ✅ Автосканирование расширений
+- ✅ Современный темный GUI
 
 ### v1.0
-- Initial release with basic cleanup functionality
+- Первый релиз с базовым функционалом очистки
 
-## � Links
+## 🔗 Ссылки
 
-- [Telegram Setup Guide](TELEGRAM_SETUP.md)
-- [Installer Build Guide](INSTALLER_GUIDE.md)
-- [GitHub Releases](../../releases)
+- [Инструкция по Telegram](TELEGRAM_SETUP.md)
+- [Инструкция по сборке инсталлятора](INSTALLER_GUIDE.md)
+- [Релизы на GitHub](../../releases)
 
 ---
 
-**Note**: This is a native C# application with minimal dependencies and small footprint (~26 KB). Perfect for servers and production environments where you need reliable, scheduled file cleanup with notifications.
+**Примечание**: Это нативное C# приложение с минимальными зависимостями и размером (~26 KB). Идеально подходит для серверов и продакшн-среды, где нужна надежная автоматическая очистка файлов с уведомлениями.
