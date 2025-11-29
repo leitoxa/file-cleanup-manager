@@ -1,0 +1,43 @@
+# File Cleanup Manager build artifacts
+*.pdb
+*.suo
+*.user
+*.cache
+*.log
+
+# Config files with sensitive data
+config.json
+
+# Installer output
+Output/
+*.iss.bak
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+.backup
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Compiled executables (keep source only)
+CleanupManager.exe
+
+# Install logs
+*.InstallLog
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Empty directory
+csharp_version/
+
