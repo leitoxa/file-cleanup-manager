@@ -6,7 +6,7 @@
  * 
  * Author: Serik Muftakhidinov
  * Created: 29.11.2025
- * Version: 1.2.3
+ * Version: 1.2.4
  * 
  * Developed with AI assistance from Google Deepmind (Gemini 2.0)
  * 
@@ -39,13 +39,13 @@ using Microsoft.Win32;
 using System.Threading;
 using System.Web.Script.Serialization;
 
-// \u0414\u043b\u044f \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0433\u043e \u0443\u0434\u0430\u043b\u0435\u043d\u0438\u044f \u0447\u0435\u0440\u0435\u0437 \u043a\u043e\u0440\u0437\u0438\u043d\u0443
+// Для безопасного удаления через корзину
 using Microsoft.VisualBasic.FileIO;
 using System.Net;
 using System.Collections.Specialized;
 
-[assembly: AssemblyVersion("1.2.3.0")]
-[assembly: AssemblyFileVersion("1.2.3.0")]
+[assembly: AssemblyVersion("1.2.4.0")]
+[assembly: AssemblyFileVersion("1.2.4.0")]
 [assembly: AssemblyTitle("File Cleanup Manager")]
 [assembly: AssemblyDescription("Автоматическая очистка файлов с уведомлениями в Telegram")]
 [assembly: AssemblyCompany("Serik Muftakhidinov")]
@@ -127,7 +127,10 @@ static class Program
                 Config = serializer.Deserialize<AppConfig>(json) ?? new AppConfig();
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log("Ошибка загрузки конфига: " + ex.Message, "ERROR");
+        }
     }
 
     public static void SaveConfig()
@@ -380,6 +383,7 @@ public class MainForm : Form
     private TextBox txtFolder;
     private NumericUpDown numDays;
     private CheckBox chkRecursive;
+    private CheckBox chkRecycleBin;
     private NumericUpDown numInterval;
     private TextBox txtExtensions;
     private TextBox txtLog;
@@ -451,17 +455,28 @@ public class MainForm : Form
         chkRecursive.Location = new Point(150, y + 25);
         chkRecursive.AutoSize = true;
         this.Controls.Add(chkRecursive);
+
+        // Корзина
+        chkRecycleBin = new CheckBox();
+        chkRecycleBin.Text = "Удалять в корзину";
+        chkRecycleBin.Location = new Point(350, y + 25);
+        chkRecycleBin.AutoSize = true;
+        this.Controls.Add(chkRecycleBin);
         y += 60;
 
         // Расширения
         AddLabel("Фильтр расширений (через запятую):", 20, y);
         txtExtensions = new TextBox();
         txtExtensions.Location = new Point(20, y + 25);
-        txtExtensions.Width = 500;
+        txtExtensions.Width = 450;
         txtExtensions.BackColor = Color.FromArgb(45, 45, 68);
         txtExtensions.ForeColor = Color.White;
         txtExtensions.BorderStyle = BorderStyle.FixedSingle;
         this.Controls.Add(txtExtensions);
+
+        var btnScan = CreateButton("🔍", 480, y + 24, 40, 25, Color.FromArgb(63, 81, 181));
+        btnScan.Click += ScanExtensionsClick;
+        this.Controls.Add(btnScan);
         y += 60;
 
         // Интервал
@@ -585,6 +600,7 @@ public class MainForm : Form
         txtFolder.Text = Program.Config.FolderPath;
         numDays.Value = Program.Config.DaysOld;
         chkRecursive.Checked = Program.Config.Recursive;
+        chkRecycleBin.Checked = Program.Config.UseRecycleBin;
         numInterval.Value = Program.Config.IntervalMinutes;
         if (Program.Config.FileExtensions != null)
             txtExtensions.Text = string.Join(", ", Program.Config.FileExtensions.ToArray());
@@ -595,6 +611,7 @@ public class MainForm : Form
         Program.Config.FolderPath = txtFolder.Text;
         Program.Config.DaysOld = (int)numDays.Value;
         Program.Config.Recursive = chkRecursive.Checked;
+        Program.Config.UseRecycleBin = chkRecycleBin.Checked;
         Program.Config.IntervalMinutes = (int)numInterval.Value;
         
         Program.Config.FileExtensions = new List<string>(
@@ -694,6 +711,55 @@ public class MainForm : Form
         tgForm.Controls.Add(btnTestTg);
         
         tgForm.ShowDialog();
+    }
+
+    private void ScanExtensionsClick(object sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(txtFolder.Text) || !Directory.Exists(txtFolder.Text))
+        {
+            MessageBox.Show("Выберите папку для сканирования!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try 
+        {
+            var extensions = new Dictionary<string, int>();
+            System.IO.SearchOption searchOption = chkRecursive.Checked ? System.IO.SearchOption.AllDirectories : System.IO.SearchOption.TopDirectoryOnly;
+            var files = Directory.GetFiles(txtFolder.Text, "*.*", searchOption);
+            
+            foreach (var file in files)
+            {
+                string ext = Path.GetExtension(file).ToLower();
+                if (!string.IsNullOrEmpty(ext))
+                {
+                    if (extensions.ContainsKey(ext)) extensions[ext]++;
+                    else extensions[ext] = 1;
+                }
+            }
+
+            if (extensions.Count == 0)
+            {
+                MessageBox.Show("Файлы с расширениями не найдены.", "Информация");
+                return;
+            }
+
+            using (var form = new ScanResultForm(extensions))
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    var current = new List<string>(txtExtensions.Text.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
+                    foreach (var ext in form.SelectedExtensions)
+                    {
+                        if (!current.Contains(ext)) current.Add(ext);
+                    }
+                    txtExtensions.Text = string.Join(", ", current.ToArray());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Ошибка сканирования: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private void BrowseFolder(object sender, EventArgs e)
@@ -813,7 +879,7 @@ public class MainForm : Form
         
         // Версия
         var lblVersion = new Label();
-        lblVersion.Text = "Версия 1.2.3";
+        lblVersion.Text = "Версия 1.2.4";
         lblVersion.Location = new Point(0, y);
         lblVersion.Size = new Size(400, 25);
         lblVersion.TextAlign = ContentAlignment.MiddleCenter;
@@ -858,5 +924,66 @@ public class MainForm : Form
         aboutForm.Controls.Add(btnClose);
         
         aboutForm.ShowDialog();
+    }
+}
+
+public class ScanResultForm : Form
+{
+    public List<string> SelectedExtensions { get; private set; }
+    private CheckedListBox chkList;
+
+    public ScanResultForm(Dictionary<string, int> extensions)
+    {
+        this.Text = "Выберите расширения";
+        this.Size = new Size(300, 400);
+        this.StartPosition = FormStartPosition.CenterParent;
+        this.BackColor = Color.FromArgb(30, 30, 46);
+        this.ForeColor = Color.White;
+        this.FormBorderStyle = FormBorderStyle.FixedDialog;
+        this.MaximizeBox = false;
+        this.MinimizeBox = false;
+
+        chkList = new CheckedListBox();
+        chkList.Location = new Point(10, 10);
+        chkList.Size = new Size(265, 300);
+        chkList.BackColor = Color.FromArgb(45, 45, 68);
+        chkList.ForeColor = Color.White;
+        chkList.BorderStyle = BorderStyle.FixedSingle;
+        chkList.CheckOnClick = true;
+
+        foreach (var kvp in extensions.OrderByDescending(x => x.Value))
+        {
+            chkList.Items.Add(string.Format("{0} ({1} файлов)", kvp.Key, kvp.Value));
+        }
+
+        this.Controls.Add(chkList);
+
+        var btnOk = new Button();
+        btnOk.Text = "Добавить";
+        btnOk.Location = new Point(10, 320);
+        btnOk.Size = new Size(100, 30);
+        btnOk.BackColor = Color.FromArgb(76, 175, 80);
+        btnOk.FlatStyle = FlatStyle.Flat;
+        btnOk.ForeColor = Color.White;
+        btnOk.Click += (s, e) => {
+            SelectedExtensions = new List<string>();
+            foreach (string item in chkList.CheckedItems)
+            {
+                SelectedExtensions.Add(item.Split(' ')[0]);
+            }
+            this.DialogResult = DialogResult.OK;
+            this.Close();
+        };
+        this.Controls.Add(btnOk);
+
+        var btnCancel = new Button();
+        btnCancel.Text = "Отмена";
+        btnCancel.Location = new Point(120, 320);
+        btnCancel.Size = new Size(100, 30);
+        btnCancel.BackColor = Color.FromArgb(244, 67, 54);
+        btnCancel.FlatStyle = FlatStyle.Flat;
+        btnCancel.ForeColor = Color.White;
+        btnCancel.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
+        this.Controls.Add(btnCancel);
     }
 }
