@@ -6,7 +6,7 @@
  * 
  * Author: Serik Muftakhidinov
  * Created: 29.11.2025
- * Version: 1.2.2
+ * Version: 1.2.3
  * 
  * Developed with AI assistance from Google Deepmind (Gemini 2.0)
  * 
@@ -44,10 +44,10 @@ using Microsoft.VisualBasic.FileIO;
 using System.Net;
 using System.Collections.Specialized;
 
-[assembly: AssemblyVersion("1.2.2.0")]
-[assembly: AssemblyFileVersion("1.2.2.0")]
+[assembly: AssemblyVersion("1.2.3.0")]
+[assembly: AssemblyFileVersion("1.2.3.0")]
 [assembly: AssemblyTitle("File Cleanup Manager")]
-[assembly: AssemblyDescription("Automatic file cleanup service with Telegram notifications")]
+[assembly: AssemblyDescription("Автоматическая очистка файлов с уведомлениями в Telegram")]
 [assembly: AssemblyCompany("Serik Muftakhidinov")]
 [assembly: AssemblyProduct("File Cleanup Manager")]
 [assembly: AssemblyCopyright("Copyright © 2025")]
@@ -58,6 +58,7 @@ public class AppConfig
     public string FolderPath { get; set; }
     public int DaysOld { get; set; }
     public bool Recursive { get; set; }
+    public bool UseRecycleBin { get; set; }
     public int IntervalMinutes { get; set; }
     public List<string> FileExtensions { get; set; }
     public string TelegramBotToken { get; set; }
@@ -68,6 +69,7 @@ public class AppConfig
         FolderPath = "";
         DaysOld = 7;
         Recursive = false;
+        UseRecycleBin = true;
         IntervalMinutes = 60;
         FileExtensions = new List<string>();
         TelegramBotToken = "";
@@ -321,7 +323,7 @@ public static class Cleaner
 
         try
         {
-            SearchOption searchOption = config.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            System.IO.SearchOption searchOption = config.Recursive ? System.IO.SearchOption.AllDirectories : System.IO.SearchOption.TopDirectoryOnly;
             var files = Directory.GetFiles(config.FolderPath, "*.*", searchOption);
 
             foreach (var file in files)
@@ -329,6 +331,36 @@ public static class Cleaner
                 try
                 {
                     // Фильтр расширений
+                    if (config.FileExtensions != null && config.FileExtensions.Count > 0)
+                    {
+                        string ext = Path.GetExtension(file).ToLower();
+                        if (!config.FileExtensions.Contains(ext)) continue;
+                    }
+
+                    DateTime lastWriteTime = File.GetLastWriteTime(file);
+                    if (lastWriteTime < threshold)
+                    {
+                        if (config.Recursive && config.UseRecycleBin)
+                        {
+                             FileSystem.DeleteFile(file, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                        }
+                        else
+                        {
+                            File.Delete(file);
+                        }
+                        
+                        deletedCount++;
+                        Program.Log(string.Format("Удален файл: {0}", file), "INFO");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Program.Log(string.Format("Ошибка удаления файла {0}: {1}", file, ex.Message), "ERROR");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
             Program.Log(string.Format("Критическая ошибка сканирования: {0}", ex.Message), "ERROR");
         }
 
@@ -781,7 +813,7 @@ public class MainForm : Form
         
         // Версия
         var lblVersion = new Label();
-        lblVersion.Text = "Версия 1.2.2";
+        lblVersion.Text = "Версия 1.2.3";
         lblVersion.Location = new Point(0, y);
         lblVersion.Size = new Size(400, 25);
         lblVersion.TextAlign = ContentAlignment.MiddleCenter;
