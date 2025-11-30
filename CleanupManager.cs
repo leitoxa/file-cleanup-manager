@@ -156,7 +156,11 @@ static class Program
     {
         try
         {
-            if (!Directory.Exists(AppDataPath)) Directory.CreateDirectory(AppDataPath);
+            if (!Directory.Exists(AppDataPath))
+            {
+                try { Directory.CreateDirectory(AppDataPath); }
+                catch { return; }
+            }
 
             string line = string.Format("{0:yyyy-MM-dd HH:mm:ss} [{1}] {2}{3}", 
                 DateTime.Now, type, message, Environment.NewLine);
@@ -267,21 +271,67 @@ public class CleanupService : ServiceBase
 
     protected override void OnStart(string[] args)
     {
-        Program.Log("Служба запущена", "SERVICE");
-        Program.LoadConfig();
-        Program.SendTelegramNotification("✅ Служба File Cleanup Service запущена");
-        
-        int interval = Program.Config.IntervalMinutes * 60 * 1000;
-        if (interval <= 0) interval = 3600000;
+        try
+        {
+            Program.Log("Служба запущена", "SERVICE");
+            Program.LoadConfig();
+            
+            // Проверка настроек
+            if (string.IsNullOrEmpty(Program.Config.FolderPath))
+            {
+                Program.Log("ОШИБКА: Не указана папка для очистки! Настройте приложение перед запуском службы.", "ERROR");
+                throw new Exception("Папка для очистки не настроена. Откройте приложение и укажите папку.");
+            }
+            
+            if (!Directory.Exists(Program.Config.FolderPath))
+            {
+                Program.Log("ОШИБКА: Папка не существует: " + Program.Config.FolderPath, "ERROR");
+                throw new Exception("Указанная папка не существует: " + Program.Config.FolderPath);
+            }
+            
+            Program.Log("Конфигурация проверена: " + Program.Config.FolderPath, "INFO");
+            
+            try
+            {
+                Program.SendTelegramNotification("✅ Служба File Cleanup Service запущена");
+            }
+            catch (Exception ex)
+            {
+                Program.Log("Ошибка отправки Telegram уведомления: " + ex.Message, "WARN");
+            }
+            
+            int interval = Program.Config.IntervalMinutes * 60 * 1000;
+            if (interval <= 0) interval = 3600000;
 
-        timer = new System.Threading.Timer(DoCleanup, null, 0, interval);
+            timer = new System.Threading.Timer(DoCleanup, null, 0, interval);
+            Program.Log("Служба успешно запущена, интервал: " + interval + "мс", "INFO");
+        }
+        catch (Exception ex)
+        {
+            Program.Log("Критическая ошибка запуска службы: " + ex.ToString(), "ERROR");
+            throw;
+        }
     }
 
     protected override void OnStop()
     {
-        Program.Log("Служба остановлена", "SERVICE");
-        Program.SendTelegramNotification("🛑 Служба File Cleanup Service остановлена");
-        if (timer != null) timer.Dispose();
+        try
+        {
+            Program.Log("Служба остановлена", "SERVICE");
+            try
+            {
+                Program.SendTelegramNotification("🛑 Служба File Cleanup Service остановлена");
+            }
+            catch (Exception ex)
+            {
+                Program.Log("Ошибка отправки Telegram уведомления: " + ex.Message, "WARN");
+            }
+            if (timer != null) timer.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Program.Log("Ошибка остановки службы: " + ex.ToString(), "ERROR");
+        }
     }
 
     private void DoCleanup(object state)
@@ -352,7 +402,7 @@ public static class Cleaner
                     DateTime lastWriteTime = File.GetLastWriteTime(file);
                     if (lastWriteTime < threshold)
                     {
-                        if (config.Recursive && config.UseRecycleBin)
+                        if (config.UseRecycleBin)
                         {
                              FileSystem.DeleteFile(file, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
                         }
@@ -797,11 +847,40 @@ public class MainForm : Form
 
     private void InstallClick(object sender, EventArgs e)
     {
+        if (string.IsNullOrEmpty(Program.Config.FolderPath))
+        {
+            MessageBox.Show("⚠️ Необходимо настроить папку для очистки!\n\n" +
+                "Укажите папку и нажмите 'Сохранить' перед установкой службы.",
+                "Настройки не заданы",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
         RunAsAdmin("/install");
     }
 
     private void StartClick(object sender, EventArgs e)
     {
+        if (string.IsNullOrEmpty(Program.Config.FolderPath))
+        {
+            MessageBox.Show("⚠️ Необходимо настроить папку для очистки!\n\n" +
+                "Укажите папку и нажмите 'Сохранить' перед запуском службы.\n\n" +
+                "Служба не запустится без корректных настроек!",
+                "Настройки не заданы",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+        if (!Directory.Exists(Program.Config.FolderPath))
+        {
+            MessageBox.Show("⚠️ Папка не существует!\n\n" +
+                "Указанная папка: " + Program.Config.FolderPath + "\n\n" +
+                "Создайте папку или укажите другой путь.",
+                "Папка не найдена",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+            return;
+        }
         RunCmd("net start FileCleanupService");
     }
 
